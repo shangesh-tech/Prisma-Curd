@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 // GET a single todo
 export async function GET(request, { params }) {
   try {
-    const { id } = params
+    const {id} = await params
     console.log("id", id)
     
     const todo = await prisma.todo.findUnique({
@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
 // UPDATE a todo
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params
+    const {id} = await params
     const body = await request.json()
     
     // Check if todo exists
@@ -60,7 +60,7 @@ export async function PATCH(request, { params }) {
 // DELETE a todo
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params
+    const {id} = await params
     
     // Check if todo exists
     const existingTodo = await prisma.todo.findUnique({
