@@ -8,13 +8,15 @@ export default function TodoList() {
   const [todos, setTodos] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
 
   // Fetch todos
-  const fetchTodos = async () => {
+  const fetchTodos = async (search = '') => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/todos')
-
+      const queryParams = search.trim().length >= 3 ? `?search=${encodeURIComponent(search)}` : ''
+      const response = await fetch(`/api/todos${queryParams}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch todos')
@@ -27,6 +29,20 @@ export default function TodoList() {
       setError(err.message)
     } finally {
       setIsLoading(false)
+      setIsSearching(false)
+    }
+  }
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value
+    setSearchTerm(value)
+    
+    if (value.trim().length >= 3) {
+      setIsSearching(true)
+      fetchTodos(value)
+    } else if (value.trim().length === 0) {
+      fetchTodos('')
     }
   }
 
@@ -101,7 +117,25 @@ export default function TodoList() {
     <div className="w-full max-w-md mx-auto">
       <TodoForm onAddTodo={addTodo} />
       
-      {isLoading && <p className="text-center py-4">Loading todos...</p>}
+      {/* Search input */}
+      <div className="mt-4 mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search todos..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {isSearching && (
+            <div className="absolute right-3 top-2.5">
+              <div className="w-5 h-5 border-t-2 border-blue-500 border-r-2 rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {isLoading && !isSearching && <p className="text-center py-4">Loading todos...</p>}
       
       {error && (
         <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
@@ -110,7 +144,9 @@ export default function TodoList() {
       )}
       
       {!isLoading && todos.length === 0 && (
-        <p className="text-center py-4 text-gray-500">No todos yet. Add one above!</p>
+        <p className="text-center py-4 text-gray-500">
+          {searchTerm.trim().length >= 3 ? 'No matching todos found.' : 'No todos yet. Add one above!'}
+        </p>
       )}
       
       <div className="mt-4">

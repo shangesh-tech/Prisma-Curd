@@ -2,9 +2,24 @@ import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 // GET all todos
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
+    
+    let whereClause = {}
+    
+    if (search && search.trim().length >= 3) {
+      whereClause = {
+        title: {
+          contains: search,
+          mode: 'insensitive'
+        }
+      }
+    }
+    
     const todos = await prisma.todo.findMany({
+      where: whereClause,
       orderBy: {
         createdAt: 'desc',
       },
